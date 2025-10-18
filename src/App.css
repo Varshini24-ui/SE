@@ -322,6 +322,8 @@ body {
   box-shadow: 0 10px 40px rgba(0,0,0,.25);
   display: flex;
   flex-direction: column;
+  resize: horizontal; /* Allow horizontal resizing */
+  position: relative; /* REQUIRED for the drag handle pseudo-element */
 }
 
 /* FIX: Enhanced Resize Drag Handle for easy vertical resizing */
