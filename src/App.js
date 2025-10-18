@@ -24,7 +24,7 @@ export default function App() {
     console.log("Logged out. Resume data automatically cleared.");
   }, []);
 
-  return (
+    return (
     <div className="app">
       {/* HEADER */}
       <header className="hero">
@@ -33,7 +33,10 @@ export default function App() {
             <h1 className="title-small">🚀 Dynamic Resume Analyzer</h1>
             {authData.isLoggedIn && (
               <div className="auth-info">
-                <span className="user-email" title={authData.userEmail}>{authData.userEmail}</span>
+                {/* MODIFIED: Use full userEmail directly */}
+                <span className="user-email" title={authData.userEmail}>
+                  Welcome, {authData.userEmail}
+                </span>
                 <button className="btn logout-btn" onClick={handleLogout}>
                   Logout
                 </button>
