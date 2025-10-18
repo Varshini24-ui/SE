@@ -1,84 +1,138 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
-// Static responses for the dummy chatbot
-const RESPONSES = {
-  greeting: "Hello! I’m your Resume Assistant 👋 How can I help you improve your ATS score?",
-  ats: "ATS scans for keywords, clean structure, and standard headings. Tailor your resume to the JD to beat it.",
-  keywords: "Pick high-signal JD terms, use action verbs, and quantify results (%, $, time).",
-  format: "Keep it simple: standard fonts, headings, bullets, consistent dates, no tables/graphics.",
-  sections: "Must-have sections for high ATS: Contact, Summary, Experience, Skills, Education. Add Projects/Certs if relevant.",
-  default: "I can help with general advice on ATS, keywords, formatting, or required sections. Ask me about your score breakdown!",
+// -----------------------------------------------------------------------------
+// CONSTANTS & CONFIGURATION
+// -----------------------------------------------------------------------------
+
+// Defines the bot's persona and constraints for short, layman-term answers.
+const SYSTEM_INSTRUCTION = `You are the 'Resume Assistant' for a 'Dynamic Resume Analyzer' website. 
+Your goal is to provide short, sweet, easy-to-read, layman-term answers for common people. Keep all responses under 3 sentences maximum, using simple language.
+Your expertise is focused on career development and resume best practices. 
+You MUST answer questions related to:
+1. Resume and ATS best practices.
+2. LinkedIn account creation, profile optimization, and writing posts.
+3. X (Twitter) account creation and writing posts.
+4. Reddit for career advice or job searching, and writing posts.
+5. Basic Git and GitHub commands for career development (e.g., clone, commit, pull).
+6. Website features, key concepts (like JD or ATS), and general user queries.
+
+For any question outside these 6 topics, simply respond with a helpful message: "I'm only trained to help with website features, resume, social media, or basic GitHub questions. What can I help you with in those areas?"`;
+
+// NOTE: This key is left as provided. In a production environment, use a secure backend.
+const GEMINI_API_KEY = "AIzaSyClMB2V__ZqmcaTHbQiK5DdpekAKVIDeRQ"; 
+
+const INITIAL_MESSAGE = { 
+  type: "bot", 
+  text: "Hello! I’m your Resume Assistant 👋 How can I help you improve your ATS score or with career social media?" 
 };
 
-const GEMINI_API_KEY = ""; // Replace with your Gemini API key AIzaSyCMYr8AiCA1yweQZTogNei_fCz203hYwOE
+// -----------------------------------------------------------------------------
+// CUSTOM HOOK: useChatLogic (Agile Logic and API Handler)
+// -----------------------------------------------------------------------------
 
-export default function Chatbot({ onClose, isOpen })  {
-  const [messages, setMessages] = useState([{ type: "bot", text: RESPONSES.greeting }]);
+/**
+ * Handles all state management and core interaction logic for the chatbot.
+ * This separation makes the component scalable and testable.
+ */
+function useChatLogic() {
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // Function to interact with the Gemini API
+  const getBotReply = useCallback(async (text) => {
+    // Fail fast if API key is missing
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_API_KEY_HERE") {
+      return "⚠️ Gemini API key is missing. Please add the key to the `Chatbot.js` file to enable AI responses.";
+    }
 
-  // Fallback logic for static responses
-  const replyFor = useCallback((text) => {
-    const t = text.toLowerCase();
-    if (t.includes("score") || t.includes("suggestions") || t.includes("breakdown")) return "To get a *detailed* breakdown and context-aware suggestions, you need to first upload your resume and run the analysis on the main page. I can then pull that data!";
-    if (t.includes("ats")) return RESPONSES.ats;
-    if (t.includes("keyword")) return RESPONSES.keywords;
-    if (t.includes("format")) return RESPONSES.format;
-    if (t.includes("section")) return RESPONSES.sections;
-    if (t.includes("hello") || t.includes("hi")) return RESPONSES.greeting;
-    return RESPONSES.default;
-  }, []);
-
-  // Gemini API call logic with fallback
-  const getBotReply = async (text) => {
     try {
-      const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY;
+      // Define the API endpoint
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      
+      // Agentic Prompt Stuffing: Combine the SYSTEM_INSTRUCTION with the user's query.
+      const fullPrompt = `${SYSTEM_INSTRUCTION}\n\nUser Question: ${text}`;
+
       const payload = {
-        contents: [{ parts: [{ text }] }],
+        contents: [{ parts: [{ text: fullPrompt }] }],
       };
+      
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      
       const data = await response.json();
-      if (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-        // Gemini response format
+      
+      if (data?.candidates?.[0]?.content?.parts) {
+        // Extract and join all text parts from the response
         return data.candidates[0].content.parts.map((p) => p.text).join(" ");
-      } else if (data.error) {
-        return replyFor(text) + `<br/><em>(Gemini API error: ${data.error.message})</em>`;
+      } else if (data?.error) {
+        // Handle explicit API errors
+        return `I had trouble connecting to the AI brain. Try asking a different way. (API Error: ${data.error.message})`;
       }
-      return replyFor(text);
+      
+      return "Sorry, I couldn't generate a response. Please try again.";
+      
     } catch (err) {
-      return replyFor(text) + "<br/><em>(Could not connect to Gemini API)</em>";
+      // Handle network errors
+      return "Oops! I can't reach the server right now. Check your internet connection. (Network Error)";
     }
-  };
+  }, []);
 
-  const send = async () => {
+  // Main function to handle user message submission
+  const send = useCallback(async () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || loading) return;
+    
+    // 1. Add user message, clear input
     setMessages((prev) => [...prev, { type: "user", text }]);
     setInput("");
     setLoading(true);
 
-    // Show "typing..." message for effect
+    // 2. Add "typing" placeholder (using <em> for visual effect)
     setMessages((prev) => [...prev, { type: "bot", text: "<em>Typing…</em>" }]);
+    
+    // 3. Get reply from AI
     let reply = await getBotReply(text);
 
-    // Remove "typing..." and show actual reply
+    // 4. Replace placeholder with final reply
     setMessages((prev) => [
       ...prev.slice(0, -1),
       { type: "bot", text: reply },
     ]);
     setLoading(false);
-  };
+  }, [input, loading, getBotReply]);
+  
+  return { messages, input, loading, setInput, send };
+}
 
-    return (
+
+// -----------------------------------------------------------------------------
+// CHATBOT COMPONENT (UI Layer)
+// -----------------------------------------------------------------------------
+
+/**
+ * Chatbot component handles the rendering and user interaction (presentational).
+ */
+export default function Chatbot({ onClose, isOpen })  {
+  // Use the custom hook for all component logic
+  const { messages, input, loading, setInput, send } = useChatLogic();
+  const messagesEndRef = useRef(null);
+  
+  // Scrolls to the latest message whenever the messages array updates
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Utility to safely parse simple markdown (*bold*)
+  const parseMessage = (text) => {
+    // Replaces *text* with <strong>text</strong>
+    return text.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+  }
+
+  return (
     <div className={`chatbot-container ${isOpen ? 'open' : ''}`}>
       <div className="chatbot">
         <div className="chat-header">
@@ -90,9 +144,8 @@ export default function Chatbot({ onClose, isOpen })  {
             <div
               key={i}
               className={`chat-message ${m.type}`}
-              dangerouslySetInnerHTML={{
-                __html: m.text.replace(/\*(.*?)\*/g, "<strong>$1</strong>"),
-              }}
+              // Render parsed content (markdown, typing effect <em>)
+              dangerouslySetInnerHTML={{ __html: parseMessage(m.text) }}
             />
           ))}
           <div ref={messagesEndRef} />
@@ -103,10 +156,12 @@ export default function Chatbot({ onClose, isOpen })  {
             value={input}
             disabled={loading}
             onChange={(e) => setInput(e.target.value)}
+            // Call send() on 'Enter' key press
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Ask about ATS, keywords, format…"
+            aria-label="Chat input"
           />
-          <button onClick={send} disabled={loading}>Send</button>
+          <button onClick={send} disabled={loading} aria-label="Send message">Send</button>
         </div>
       </div>
     </div>
