@@ -55,9 +55,6 @@ body {
 .user-email {
   font-size: 0.9rem;
   opacity: 0.8;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .logout-btn {
@@ -316,13 +313,29 @@ body {
 }
 .chatbot {
   width: 360px; /* Side panel width */
-  height: 500px; /* Fixed height for a panel */
+  min-height: 200px; /* Minimum height for responsiveness */
+  height: 500px; /* Default height */
+  max-height: 80vh; /* Maximum height */
   background: #fff;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0,0,0,.25);
   display: flex;
   flex-direction: column;
+}
+
+/* FIX: Enhanced Resize Drag Handle for easy vertical resizing */
+.chatbot::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%; 
+  height: 15px; /* Large, accessible drag area */
+  cursor: ns-resize; /* Vertical resize cursor */
+  background: rgba(37,99,235,0.05); /* Light visual cue for drag zone */
+  border-bottom-right-radius: 16px;
+  z-index: 5; /* Keep it below the input row but visible */
 }
 
 /* ----- Chatbot Interior Styles ----- */
@@ -372,6 +385,8 @@ body {
   gap: .6rem; 
   padding: .8rem; 
   border-top: 1px solid #e5e7eb;
+  z-index: 10; /* Ensure input is on top of the drag handle */
+  background: #fff; /* Ensure white background */
 }
 .chat-input-row input {
   flex: 1; 
@@ -408,6 +423,10 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 0;
+  }
+  /* Hide custom drag handle on full-screen mobile view */
+  .chatbot::after {
+    display: none; 
   }
 }
 
@@ -659,5 +678,9 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 0;
+  }
+  /* Hide custom drag handle on full-screen mobile view */
+  .chatbot::after {
+    display: none; 
   }
 }
