@@ -1,29 +1,40 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react"; // ADDED useEffect
 import ResumeAnalyzer from "./ResumeAnalyzer";
 import Chatbot from "./Chatbot";
 import Auth from "./Auth";
 import "./App.css";
+const SESSION_AUTH_KEY = "RA_SESSION_AUTH";
 
 export default function App() {
   const [showChatbot, setShowChatbot] = useState(false);
-  // State for login/logout and user credentials for secure file upload
   const [authData, setAuthData] = useState({
     isLoggedIn: false,
     userEmail: null,
     passwordHash: null,
   });
-
-  // Handles successful dummy login, saving credentials for mock storage authorization
+  useEffect(() => {
+    const savedAuth = sessionStorage.getItem(SESSION_AUTH_KEY);
+    if (savedAuth) {
+      try {
+        setAuthData(JSON.parse(savedAuth));
+      } catch (e) {
+        sessionStorage.removeItem(SESSION_AUTH_KEY);
+      }
+    }
+  }, []);
+// Handles successful login and saves to sessionStorage
   const handleLogin = useCallback(({ email, passwordHash }) => {
-    setAuthData({ isLoggedIn: true, userEmail: email, passwordHash });
+    const newAuthData = { isLoggedIn: true, userEmail: email, passwordHash };
+    setAuthData(newAuthData);
+    sessionStorage.setItem(SESSION_AUTH_KEY, JSON.stringify(newAuthData));
+    console.log(`[App] Session for ${email} saved.`);
   }, []);
 
   const handleLogout = useCallback(() => {
     setAuthData({ isLoggedIn: false, userEmail: null, passwordHash: null });
-    // Using an informational message box instead of alert()
-    console.log("Logged out. Resume data automatically cleared.");
+    sessionStorage.removeItem(SESSION_AUTH_KEY); // Clear session data
+    console.log("Logged out. Session cleared. Resume data remains persisted in localStorage.");
   }, []);
-
     return (
     <div className="app">
       {/* HEADER */}
@@ -35,7 +46,7 @@ export default function App() {
               <div className="auth-info">
                 {/* MODIFIED: Use full userEmail directly */}
                 <span className="user-email" title={authData.userEmail}>
-                  Welcome, {authData.userEmail}
+                  {authData.userEmail}
                 </span>
                 <button className="btn logout-btn" onClick={handleLogout}>
                   Logout
