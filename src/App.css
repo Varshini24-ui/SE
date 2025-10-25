@@ -522,19 +522,19 @@ body {
   color: #333;
 }
 
-/* ----- FLOATING CHATBOT & FAB STYLES ------------------------------- */
+/* ----- Floating Chatbot Button (FAB) ----- */
 .fab {
-  position: fixed; right: 2rem; bottom: 2rem;
-  width: 4rem; height: 4rem; border-radius: 50%;
+  position: fixed; right: 1.5rem; bottom: 1.5rem;
+  width: 3.5rem; height: 3.5rem; border-radius: 50%;
   border: none; background: var(--brand); color: #fff;
-  font-size: 1.6rem; cursor: pointer;
-  box-shadow: 0 16px 32px rgba(79,70,229,.45);
+  font-size: 1.5rem; cursor: pointer;
+  box-shadow: 0 14px 28px rgba(37,99,235,.4);
   z-index: 1000;
-  transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
 .fab:hover {
-  transform: scale(1.08);
-  box-shadow: 0 18px 36px rgba(79,70,229,.5);
+  transform: scale(1.05);
+  box-shadow: 0 16px 30px rgba(37,99,235,.45);
   background: var(--dark-blue);
 }
 .fab-active { 
@@ -542,11 +542,13 @@ body {
   transform: rotate(45deg); 
 }
 
+/* ----- Chatbot Side Panel (NEW STYLES) ----- */
 .chatbot-container { 
   position: fixed;
-  right: 2rem;
-  bottom: 7rem; /* Position above the FAB */
+  right: 1.5rem;
+  bottom: 6rem; /* Position above the FAB */
   z-index: 999;
+  /* Initial state: off-screen/hidden */
   transform: translateX(100%);
   opacity: 0;
   pointer-events: none;
@@ -558,82 +560,124 @@ body {
   pointer-events: auto;
 }
 .chatbot {
-  width: 380px; /* Slightly wider side panel */
-  height: 520px; 
-  max-height: 80vh; 
+  width: 360px; /* Side panel width */
+  min-height: 200px; /* Minimum height for responsiveness */
+  height: 500px; /* Default height */
+  max-height: 80vh; /* Maximum height */
   background: #fff;
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 12px 48px rgba(0,0,0,.3);
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
   display: flex;
   flex-direction: column;
-  position: relative; 
+  resize: horizontal; /* Allow horizontal resizing */
+  position: relative; /* REQUIRED for the drag handle pseudo-element */
 }
 
+/* FIX: Enhanced Resize Drag Handle for easy vertical resizing */
+.chatbot::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%; 
+  height: 15px; /* Large, accessible drag area */
+  cursor: ns-resize; /* Vertical resize cursor */
+  background: rgba(37,99,235,0.05); /* Light visual cue for drag zone */
+  border-bottom-right-radius: 16px;
+  z-index: 5; /* Keep it below the input row but visible */
+}
+
+/* ----- Chatbot Interior Styles ----- */
 .chat-header {
   background: var(--brand); 
   color: #fff;
   display: flex; 
   align-items: center; 
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  font-weight: 700;
-  font-size: 1.1rem;
+  padding: .85rem 1rem;
+}
+.chat-header .x {
+  background: transparent; 
+  border: none; 
+  color: #fff;
+  font-size: 1.2rem; 
+  cursor: pointer;
 }
 .chat-messages {
   flex: 1; 
   overflow-y: auto; 
   padding: 1rem;
-  background: #fcfdfe; 
+  background: #f9fafb; 
   display: flex; 
   flex-direction: column; 
-  gap: .7rem;
+  gap: .6rem;
 }
 .chat-message {
-  max-width: 85%; 
-  padding: .75rem 1rem;
-  border-radius: 16px; 
+  max-width: 78%; 
+  padding: .65rem .95rem;
+  border-radius: 14px; 
   line-height: 1.4;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 .chat-message.bot { 
   background: #eef2ff; 
   color: #1e293b; 
   align-self: flex-start; 
-  border-bottom-left-radius: 4px;
 }
 .chat-message.user { 
   background: var(--brand); 
   color: #fff; 
   align-self: flex-end; 
-  border-bottom-right-radius: 4px;
 }
 .chat-input-row {
   display: flex; 
-  gap: .8rem; 
-  padding: 1rem; 
+  gap: .6rem; 
+  padding: .8rem; 
   border-top: 1px solid #e5e7eb;
-  background: #fff; 
+  z-index: 10; /* Ensure input is on top of the drag handle */
+  background: #fff; /* Ensure white background */
 }
 .chat-input-row input {
   flex: 1; 
-  padding: .75rem 1rem; 
+  padding: .65rem .8rem; 
   border: 1px solid #d1d5db;
   border-radius: 12px; 
   outline: none;
 }
 .chat-input-row button {
-  padding: .75rem 1rem; 
+  padding: .65rem .95rem; 
   border: none; 
   border-radius: 12px;
   background: var(--brand); 
   color: #fff; 
   cursor: pointer;
   transition: background .2s ease;
-  font-weight: 600;
 }
 .chat-input-row button:hover { 
   background: var(--dark-blue); 
+}
+
+/* Chatbot Mobile Responsiveness */
+@media (max-width: 480px) {
+  .chatbot-container.open {
+    /* Full screen chat overlay on smallest screens */
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(0);
+    opacity: 1;
+  }
+  .chatbot {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+  /* Hide custom drag handle on full-screen mobile view */
+  .chatbot::after {
+    display: none; 
+  }
 }
 
 /* ----- AUTH PAGE STYLES -------------------------------------------- */
