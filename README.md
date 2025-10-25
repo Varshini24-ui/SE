@@ -1,7 +1,3 @@
-The provided files implement a React application called **Dynamic Resume Analyzer**, which is a comprehensive tool designed to help users optimize their resumes for Applicant Tracking Systems (ATS).
-
-Here is a GitHub README file for the project:
-
 # 🚀 Dynamic Resume Analyzer
 
 ## ATS-Aware Scoring • Templates • Instant PDF
