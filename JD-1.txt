@@ -1,0 +1,14 @@
+Job Title: Data Analyst (Fresher)
+Job Description:
+We are seeking a detail-oriented and analytical Data Analyst to join our team. As a fresher, you will support data collection, cleaning, and visualization efforts to help drive business decisions. You’ll work closely with senior analysts and cross-functional teams to uncover insights from structured and unstructured data.
+Key Responsibilities:
+- Assist in data extraction, transformation, and loading (ETL)
+- Clean and validate datasets for accuracy and completeness
+- Create basic dashboards and reports using Excel, SQL, or BI tools
+- Support ad hoc analysis and data requests
+- Collaborate with teams to understand data needs and deliver insights
+Requirements:
+- Bachelor’s degree in Statistics, Mathematics, Computer Science, or related field
+- Familiarity with Excel, SQL, and data visualization tools (e.g., Power BI, Tableau)
+- Strong analytical and problem-solving skills
+- Eagerness to learn and grow in a data-driven environment
