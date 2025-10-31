@@ -1,0 +1,40 @@
+Senior Full Stack Developer - TechCorp Inc.
+
+Location: San Francisco, CA (Remote Available)
+Employment Type: Full-time
+Salary Range: $150,000 - $200,000 + Benefits
+
+ABOUT THE ROLE
+We are seeking an experienced Senior Full Stack Developer to join our innovative team. You will be responsible for designing and implementing scalable web applications using modern technologies.
+
+KEY RESPONSIBILITIES
+- Design, develop, and deploy full-stack web applications using React and Node.js
+- Architect and implement RESTful APIs and microservices
+- Optimize application performance and user experience
+- Conduct code reviews and mentor junior developers
+- Participate in Agile ceremonies and sprint planning
+- Ensure code quality through testing and documentation
+
+REQUIRED SKILLS
+- 5+ years of professional software development experience
+- Expert-level proficiency in JavaScript/TypeScript and React
+- Strong backend experience with Node.js and Express
+- Database design and optimization (MongoDB, PostgreSQL)
+- Understanding of RESTful API design principles
+- Experience with containerization (Docker)
+- Proficiency with version control (Git)
+- Experience with AWS or similar cloud platforms
+
+NICE TO HAVE
+- Experience with GraphQL and Apollo
+- Knowledge of machine learning and AI integration
+- Kubernetes cluster management
+- Contributions to open-source projects
+
+BENEFITS
+- Competitive salary and equity package
+- Comprehensive health insurance
+- 401(k) matching (up to 5%)
+- Unlimited PTO policy
+- Professional development budget ($5,000/year)
+- Remote work flexibility

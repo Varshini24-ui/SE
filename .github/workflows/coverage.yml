@@ -1,0 +1,91 @@
+name: Coverage Report
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Generate coverage report
+      run: npm run test:coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: Comment PR with coverage
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const coverage = JSON.parse(fs.readFileSync('./coverage/coverage-summary.json', 'utf8'));
+          const total = coverage.total;
+          
+          const comment = `
+          ## 📊 Coverage Report
+          
+          | Metric | Coverage |
+          |--------|----------|
+          | Statements | ${total.statements.pct}% |
+          | Branches | ${total.branches.pct}% |
+          | Functions | ${total.functions.pct}% |
+          | Lines | ${total.lines.pct}% |
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Check coverage thresholds
+      run: |
+        STATEMENTS=$(jq '.total.statements.pct' coverage/coverage-summary.json)
+        BRANCHES=$(jq '.total.branches.pct' coverage/coverage-summary.json)
+        FUNCTIONS=$(jq '.total.functions.pct' coverage/coverage-summary.json)
+        LINES=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+        
+        echo "Coverage Results:"
+        echo "Statements: $STATEMENTS%"
+        echo "Branches: $BRANCHES%"
+        echo "Functions: $FUNCTIONS%"
+        echo "Lines: $LINES%"
+        
+        if (( $(echo "$STATEMENTS < 70" | bc -l) )); then
+          echo "ERROR: Statements coverage below 70%: $STATEMENTS%"
+          exit 1
+        fi
+        
+        if (( $(echo "$BRANCHES < 60" | bc -l) )); then
+          echo "ERROR: Branches coverage below 60%: $BRANCHES%"
+          exit 1
+        fi
+
+    - name: Archive coverage report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-report
+        path: coverage/lcov-report/
+        retention-days: 30
