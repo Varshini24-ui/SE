@@ -1,0 +1,61 @@
+name: Coverage Report
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Generate coverage report
+      run: npm run test:coverage
+      continue-on-error: true
+
+    - name: Check coverage thresholds
+      run: |
+        if [ -f coverage/coverage-summary.json ]; then
+          STATEMENTS=$(jq '.total.statements.pct' coverage/coverage-summary.json)
+          BRANCHES=$(jq '.total.branches.pct' coverage/coverage-summary.json)
+          FUNCTIONS=$(jq '.total.functions.pct' coverage/coverage-summary.json)
+          LINES=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+          
+          echo "Coverage Results:"
+          echo "Statements: $STATEMENTS%"
+          echo "Branches: $BRANCHES%"
+          echo "Functions: $FUNCTIONS%"
+          echo "Lines: $LINES%"
+          
+          if (( $(echo "$STATEMENTS < 50" | bc -l) )); then
+            echo "WARNING: Statements coverage below 50%: $STATEMENTS%"
+          fi
+          
+          if (( $(echo "$BRANCHES < 40" | bc -l) )); then
+            echo "WARNING: Branches coverage below 40%: $BRANCHES%"
+          fi
+        else
+          echo "Coverage file not found. Running tests..."
+        fi
+      continue-on-error: true
+
+    - name: Archive coverage report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage/
+        retention-days: 30
