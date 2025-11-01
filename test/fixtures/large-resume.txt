@@ -1,0 +1,3 @@
+[Create a long resume by duplicating the sample-resume.txt content multiple times]
+John Doe
+[... repeat content 5-10 times to simulate a large file ...]

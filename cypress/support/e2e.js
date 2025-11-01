@@ -17,8 +17,10 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 // Before each test
 beforeEach(() => {
   // Clear storage
-  cy.clearLocalStorage();
-  cy.clearSessionStorage();
+  cy.window().then((win) => {
+    win.localStorage.clear();
+    win.sessionStorage.clear();
+  });
   
   // Reset network
   cy.intercept('*', (req) => {
@@ -43,6 +45,8 @@ before(() => {
 // Global test teardown
 after(() => {
   // Cleanup global test data
-  cy.clearLocalStorage();
-  cy.clearSessionStorage();
+  cy.window().then((win) => {
+    win.localStorage.clear();
+    win.sessionStorage.clear();
+  });
 });
