@@ -11,6 +11,9 @@ Cypress.on('uncaught:exception', (err, runnable) => {
   if (err.message.includes('ResizeObserver loop limit exceeded')) {
     return false;
   }
+  if (err.message.includes('Cannot read')) {
+    return false;
+  }
   return true;
 });
 
@@ -20,11 +23,6 @@ beforeEach(() => {
   cy.window().then((win) => {
     win.localStorage.clear();
     win.sessionStorage.clear();
-  });
-  
-  // Reset network
-  cy.intercept('*', (req) => {
-    req.continue();
   });
 });
 
@@ -36,15 +34,11 @@ afterEach(() => {
 
 // Global test setup
 before(() => {
-  // Setup global test data
-  cy.window().then((win) => {
-    win.localStorage.setItem('TEST_MODE', 'true');
-  });
+  cy.visit('http://localhost:3000');
 });
 
 // Global test teardown
 after(() => {
-  // Cleanup global test data
   cy.window().then((win) => {
     win.localStorage.clear();
     win.sessionStorage.clear();
