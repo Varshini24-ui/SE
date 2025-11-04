@@ -24,8 +24,9 @@ jobs:
 
       - name: Check file permissions
         run: |
-          echo "Checking for executable files that shouldn't be executable..."
+          echo "Checking for executable files (excluding .git, .sh files, and node_modules)..."
           find . -type f -executable ! -path "./.git/*" ! -name "*.sh" ! -path "./node_modules/*" || true
+          echo "Permission check completed (informational only)"
 
   nodejs-test:
     name: Node.js Tests
@@ -48,7 +49,6 @@ jobs:
         run: npm test
 
       - name: Run linter
-        if: hashFiles('package.json') != ''
         run: |
           if grep -q '"lint"' package.json; then
             npm run lint
@@ -70,7 +70,7 @@ jobs:
           python-version: '3.11'
 
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: hashFiles('requirements.txt') != ''
         with:
           path: ~/.cache/pip
