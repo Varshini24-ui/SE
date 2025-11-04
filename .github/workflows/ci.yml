@@ -18,17 +18,18 @@ jobs:
 
       - name: Check for trailing whitespace
         run: |
-          if git diff --check HEAD~1 2>/dev/null || git diff --check --cached 2>/dev/null; then
-            echo "No trailing whitespace found"
-          else
+          if ! git diff --check HEAD~1 2>/dev/null && ! git diff --check --cached 2>/dev/null; then
             echo "Trailing whitespace found"
             exit 1
+          else
+            echo "No trailing whitespace found"
           fi
 
       - name: Check file permissions
         run: |
           echo "Checking for executable files (excluding .git, .sh files, and node_modules)..."
-          find . -type f -executable ! -path "./.git/*" ! -name "*.sh" ! -path "./node_modules/*" || true
+          executable_count=$(find . -type f -executable ! -path "./.git/*" ! -name "*.sh" ! -path "./node_modules/*" 2>/dev/null | wc -l)
+          echo "Found $executable_count unexpected executable files"
           echo "Permission check completed (informational only)"
 
   nodejs-test:
@@ -98,7 +99,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          if python -c "import pytest" 2>/dev/null; then
+          if python -m pytest --version >/dev/null 2>&1; then
             if [ -f "pyproject.toml" ] && [ ! -f "requirements.txt" ]; then
               poetry run pytest
             else
