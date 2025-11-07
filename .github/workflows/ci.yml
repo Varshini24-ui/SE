@@ -1,49 +1,63 @@
-name: CI
-
-# Run only on pushes to the main branch
+# CI: Lint → Unit tests (with coverage) → Build (no Cypress / E2E)
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-permissions:
-  contents: read
+name: CI
 
 jobs:
-  build:
-    name: Build
+  test-and-build:
+    name: Lint → Unit tests → Build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Node.js setup (if package.json exists)
-      - name: Set up Node.js
-        if: ${{ exists('package.json') }}
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies (Node.js)
-        if: ${{ exists('package.json') }}
+      - name: Install dependencies
         run: npm ci
 
-      # Python setup (if requirements.txt or pyproject.toml exists)
-      - name: Set up Python
-        if: ${{ exists('requirements.txt') || exists('pyproject.toml') }}
-        uses: actions/setup-python@v4
+      - name: Lint
+        run: |
+          if npm run | grep -q "lint"; then
+            npm run lint
+          else
+            echo "No lint script found in package.json, skipping lint step."
+          fi
+
+      - name: Run unit tests (with coverage)
+        env:
+          CI: true
+        run: |
+          # Prefer a dedicated test:coverage script if present
+          if npm run | grep -q "test:coverage"; then
+            npm run test:coverage
+          else
+            npm test -- --coverage --watchAll=false --passWithNoTests
+          fi
+
+      - name: Build production bundle
+        run: |
+          if npm run | grep -q "build"; then
+            npm run build
+          else
+            echo "No build script found; skipping build step."
+          fi
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          python-version: '3.11'
-
-      - name: Install dependencies (Python)
-        if: ${{ exists('requirements.txt') || exists('pyproject.toml') }}
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f pyproject.toml ]; then pip install poetry && poetry install --no-interaction --no-ansi; fi
-
-      # Optional: Lint or build step
-      - name: Lint / Basic checks
-        run: |
-          echo "Run repository-specific linters or build commands here (adjust as needed)"
+          name: coverage-report
+          path: coverage
