@@ -28,7 +28,9 @@
     "eslint-config-react-app": "^7.0.1",
     "prettier": "^2.8.8",
     "codecov": "^3.8.3",
-    "wait-on": "^6.0.1"
+    "wait-on": "^6.0.1",
+    "start-server-and-test": "^2.0.3",
+    "concurrently": "^8.2.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -48,11 +50,26 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "cypress:headless": "cypress run --headless --browser chrome",
+    "cypress:chrome": "cypress run --browser chrome",
+    "cypress:firefox": "cypress run --browser firefox",
+    "cypress:edge": "cypress run --browser edge",
+    "test:e2e": "start-server-and-test start http://localhost:3000 cypress:run",
+    "test:e2e:open": "start-server-and-test start http://localhost:3000 cypress:open",
+    "test:e2e:headless": "start-server-and-test start http://localhost:3000 cypress:headless",
+    "test:e2e:chrome": "start-server-and-test start http://localhost:3000 cypress:chrome",
+    "test:e2e:ci": "start-server-and-test start http://localhost:3000 'cypress run --record'",
+    "test:full": "npm run test:coverage && npm run test:e2e",
+    "cypress:verify": "cypress verify",
+    "cypress:info": "cypress info",
+    "cypress:version": "cypress version",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/ test/ cypress/",
     "format:check": "prettier --check src/ test/ cypress/",
-    "coverage:report": "open coverage/lcov-report/index.html || xdg-open coverage/lcov-report/index.html"
+    "coverage:report": "open coverage/lcov-report/index.html || xdg-open coverage/lcov-report/index.html",
+    "clean": "rm -rf node_modules cypress/videos cypress/screenshots coverage",
+    "clean:cypress": "rm -rf cypress/videos cypress/screenshots",
+    "postinstall": "cypress verify || echo 'Cypress verification failed'"
   },
   "eslintConfig": {
     "extends": [
@@ -71,5 +88,32 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/setupTests.js"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+      "\\.(jpg|jpeg|png|gif|svg)$": "<rootDir>/__mocks__/fileMock.js"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}",
+      "!src/index.js",
+      "!src/reportWebVitals.js"
+    ],
+    "coverageThresholds": {
+      "global": {
+        "branches": 50,
+        "functions": 50,
+        "lines": 50,
+        "statements": 50
+      }
+    }
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
   }
 }

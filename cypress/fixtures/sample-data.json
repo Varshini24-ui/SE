@@ -1,0 +1,14 @@
+{
+  "users": {
+    "testUser": {
+      "email": "testuser@example.com",
+      "password": "SecurePass123!"
+    },
+    "existingUser": {
+      "email": "alpha123@gmail.com",
+      "password": "yourPassword"
+    }
+  },
+  "resume": "John Doe\nEmail: john.doe@example.com | Phone: (555) 123-4567\n\nSUMMARY\nExperienced software developer with expertise in modern web technologies.\n\nSKILLS\n• React, JavaScript, TypeScript\n• Node.js, Express, MongoDB\n• AWS, Docker, Git\n\nEXPERIENCE\nSenior Developer | Tech Corp | 2020-Present\n• Led development of microservices architecture\n• Improved performance by 40%\n• Mentored junior developers",
+  "jobDescription": "Looking for Senior Developer with React, Node.js, and AWS experience. Must have strong problem-solving skills and ability to lead teams."
+}

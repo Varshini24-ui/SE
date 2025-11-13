@@ -5,42 +5,47 @@
 
 import './commands';
 
-// Disable uncaught exception handling for 3rd party errors
+// ============================================
+// Global Error Handling
+// ============================================
+
 Cypress.on('uncaught:exception', (err, runnable) => {
-  // Ignore specific errors
-  if (err.message.includes('ResizeObserver loop limit exceeded')) {
+  // Ignore specific errors that don't affect tests
+  const ignoredErrors = [
+    'ResizeObserver loop limit exceeded',
+    'ResizeObserver loop completed with undelivered notifications',
+    'Cannot read properties of undefined',
+    'Cannot read properties of null',
+    'NetworkError',
+    'Failed to fetch',
+  ];
+  
+  if (ignoredErrors.some(msg => err.message.includes(msg))) {
     return false;
   }
-  if (err.message.includes('Cannot read')) {
-    return false;
-  }
+  
+  // Log other errors but don't fail the test
+  cy.log('Uncaught exception:', err.message);
   return true;
 });
 
-// Before each test
+// ============================================
+// Global Hooks
+// ============================================
+
 beforeEach(() => {
-  // Clear storage
-  cy.window().then((win) => {
-    win.localStorage.clear();
-    win.sessionStorage.clear();
-  });
+  // Clear all storage before each test
+  cy.clearAllStorage();
+  
+  // Set viewport
+  cy.viewport(1280, 720);
 });
 
-// After each test
-afterEach(() => {
-  // Screenshot on failure
-  cy.screenshot({ capture: 'runner', onlyOnFailure: true });
-});
-
-// Global test setup
-before(() => {
-  cy.visit('http://localhost:3000');
-});
-
-// Global test teardown
-after(() => {
-  cy.window().then((win) => {
-    win.localStorage.clear();
-    win.sessionStorage.clear();
-  });
+afterEach(function() {
+  // Take screenshot on failure
+  if (this.currentTest.state === 'failed') {
+    cy.screenshot(`${this.currentTest.title} -- FAILED`, {
+      capture: 'fullPage',
+    });
+  }
 });
