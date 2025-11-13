@@ -1,327 +1,320 @@
 describe('E2E: Resume Analysis Flow', () => {
-  const sampleResume = `John Doe
-Email: john.doe@example.com | Phone: (555) 123-4567 | LinkedIn: linkedin.com/in/johndoe
-
-SUMMARY
-Senior Software Engineer with 5+ years of experience in full-stack development, specializing in React, Node.js, and cloud technologies.
-
-SKILLS
-• Frontend: React, JavaScript, TypeScript, HTML5, CSS3
-• Backend: Node.js, Express, Python, MongoDB
-• Cloud: AWS, Docker, Kubernetes
-• Tools: Git, Jenkins, JIRA
-
-EXPERIENCE
-Senior Software Engineer | Tech Company | 2020-Present
-• Spearheaded development of microservices architecture serving 1M+ users
-• Optimized application performance by 40% through code refactoring
-• Led team of 5 developers in agile environment
-
-Software Engineer | StartupCo | 2018-2020
-• Developed RESTful APIs using Node.js and Express
-• Implemented responsive UI components with React
-• Collaborated with cross-functional teams on product launches
-
-EDUCATION
-Bachelor of Science in Computer Science
-University of Technology | 2014-2018
-
-PROJECTS
-E-commerce Platform - Built full-stack application with React and Node.js
-Mobile App - Developed iOS app with 50K+ downloads`;
-
-  const sampleJobDescription = `We are seeking a Senior Software Engineer with strong expertise in React and Node.js. 
-The ideal candidate will have:
-- 5+ years of software development experience
-- Strong proficiency in React, JavaScript, TypeScript
-- Experience with Node.js, Express, and RESTful APIs
-- Cloud experience with AWS or similar platforms
-- Excellent problem-solving and communication skills
-- Experience leading development teams
-- Knowledge of microservices architecture
-- Agile development methodology experience`;
-
   beforeEach(() => {
-    cy.clearAllStorage();
-    cy.login('testuser@example.com', 'SecurePass123!');
-    cy.waitForApp();
+    cy.clearAppData();
+    cy.loginUser('alpha123@gmail.com', 'yourPassword');
   });
 
-  // ============================================
-  // E2E_RESUME_001-005: Upload & Analysis
-  // ============================================
-  describe('E2E_RESUME_001-005: Resume Upload and Analysis', () => {
-    
-    it('E2E_RESUME_001: Should paste and analyze resume text', () => {
-      // Fill resume
-      cy.fillResume(sampleResume);
+  describe('E2E_RESUME_001: Resume Input', () => {
+    it('Should display resume input textarea', () => {
+      cy.get('textarea').first().should('be.visible');
+      cy.get('textarea').first()
+        .invoke('attr', 'placeholder')
+        .should('include', 'resume');
+    });
+
+    it('Should enter resume text', () => {
+      const resumeText = 'John Doe\nEmail: john@example.com\nPhone: (555) 123-4567\n\nSummary\nExperienced developer\n\nSkills\nReact, Node.js, MongoDB\n\nExperience\nSenior Developer at TechCorp';
       
-      // Verify text is entered
+      cy.get('textarea').first().clear().type(resumeText, { delay: 0 });
       cy.get('textarea').first().should('contain.value', 'John Doe');
-      
-      // Analyze
-      cy.analyzeResume();
-      
-      // Verify analysis results
-      cy.get('[class*="score"]').should('be.visible');
-      cy.get('[class*="score"]').should('contain', /\d+/);
     });
 
-    it('E2E_RESUME_002: Should analyze resume with job description', () => {
-      // Fill both resume and JD
-      cy.fillResume(sampleResume);
-      cy.fillJobDescription(sampleJobDescription);
+    it('Should handle large resume text', () => {
+      const largeResume = 'John Doe\n'.repeat(100) + 'Skills\nReact, Node.js\n'.repeat(50);
       
-      // Analyze
-      cy.analyzeResume();
-      
-      // Verify higher score due to keyword matching
-      cy.get('[class*="score"]').should('be.visible');
-      cy.get('body').should('contain', /keyword|match/i);
+      cy.get('textarea').first().clear().type(largeResume, { delay: 0 });
+      cy.get('textarea').first().should('not.be.empty');
     });
 
-    it('E2E_RESUME_003: Should display ATS score with color coding', () => {
-      cy.completeResumeAnalysis(sampleResume, sampleJobDescription);
-      
-      // Score should be visible
-      cy.get('.score-num').should('be.visible');
-      cy.get('.score-num').invoke('text').then((scoreText) => {
-        const score = parseInt(scoreText);
-        expect(score).to.be.at.least(0);
-        expect(score).to.be.at.most(100);
-      });
-      
-      // Score ring should exist
-      cy.get('.score-ring').should('exist');
-    });
-
-    it('E2E_RESUME_004: Should show detailed feedback and suggestions', () => {
-      cy.completeResumeAnalysis(sampleResume, sampleJobDescription);
-      
-      // Wait for analysis card
-      cy.get('.ats-analysis-card').should('be.visible');
-      
-      // Should show actionable suggestions
-      cy.get('.feedback-list').should('exist');
-      cy.get('.feedback-list li').should('have.length.at.least', 1);
-      
-      // Should contain feedback keywords
-      cy.get('body').should('contain', /structure|keyword|vocabulary/i);
-    });
-
-    it('E2E_RESUME_005: Should persist resume data in localStorage', () => {
-      cy.fillResume(sampleResume);
-      cy.fillJobDescription(sampleJobDescription);
-      cy.analyzeResume();
-      
-      // Reload page
-      cy.reload();
-      cy.waitForApp();
-      
-      // Data should persist
-      cy.get('textarea').first().should('contain.value', 'John Doe');
-      cy.get('textarea').last().should('contain.value', 'Senior Software Engineer');
-    });
-  });
-
-  // ============================================
-  // E2E_RESUME_006-010: Template Selection & PDF Export
-  // ============================================
-  describe('E2E_RESUME_006-010: Template Selection and PDF Export', () => {
-    
-    beforeEach(() => {
-      cy.completeResumeAnalysis(sampleResume, sampleJobDescription);
-    });
-
-    it('E2E_RESUME_006: Should display template selection options', () => {
-      // Template grid should be visible
-      cy.get('.template-grid').should('be.visible');
-      
-      // Should have multiple templates
-      cy.get('[class*="template-card"]').should('have.length.at.least', 3);
-      
-      // Templates should have names
-      cy.get('.template-name').should('exist');
-    });
-
-    it('E2E_RESUME_007: Should select and apply template', () => {
-      // Click on Modern Professional template
-      cy.contains('.template-name', 'Modern Professional').parent().click();
-      
-      // Verify selection
-      cy.get('[class*="template-card"][class*="selected"]').should('exist');
-      cy.contains('.template-name', 'Modern Professional')
-        .parent()
-        .should('have.class', 'selected');
-    });
-
-    it('E2E_RESUME_008: Should change template and update preview', () => {
-      // Select first template
-      cy.get('[class*="template-card"]').first().click();
-      cy.wait(500);
-      
-      // Select different template
-      cy.get('[class*="template-card"]').eq(1).click();
-      cy.wait(500);
-      
-      // Preview should exist
-      cy.get('.resume-sheet').should('be.visible');
-      cy.get('.sheet-header').should('be.visible');
-    });
-
-    it('E2E_RESUME_009: Should export resume as PDF', () => {
-      // Verify download button exists and click it
-      cy.contains('button', /download|export|pdf/i)
-        .should('be.visible')
-        .should('not.be.disabled')
-        .click();
-      
-      // Should show processing state
-      cy.wait(1000);
-      
-      // Button should be visible after processing
-      cy.contains('button', /download|export|pdf/i, { timeout: 10000 })
-        .should('be.visible');
-    });
-
-    it('E2E_RESUME_010: Should include selected template in PDF export', () => {
-      // Select specific template
-      cy.contains('.template-name', 'Minimal Clean').parent().click();
-      cy.wait(500);
-      
-      // Download PDF
-      cy.downloadPDF();
-      
-      // Verify button text includes template name
-      cy.contains('button', /Minimal Clean/i).should('exist');
-    });
-  });
-
-  // ============================================
-  // E2E_RESUME_011-015: Edge Cases & Validation
-  // ============================================
-  describe('E2E_RESUME_011-015: Edge Cases and Validation', () => {
-    
-    it('E2E_RESUME_011: Should handle empty resume gracefully', () => {
-      // Try to analyze without resume
-      cy.contains('button', /analyze resume/i).should('be.disabled');
-      
-      // Or should show error if clicked
-      cy.get('textarea').first().clear();
-      cy.get('body').then(($body) => {
-        const analyzeBtn = $body.find('button:contains("ANALYZE RESUME")');
-        if (analyzeBtn.prop('disabled') === false) {
-          analyzeBtn.click();
-          cy.wait(1000);
-          cy.get('body').should('contain', /please|resume|content/i);
-        }
+    it('Should upload TXT file successfully', () => {
+      cy.fixture('resumes/resume1.txt').then(fileContent => {
+        cy.get('input[type="file"]').selectFile({
+          contents: Cypress.Buffer.from(fileContent),
+          fileName: 'resume.txt',
+          mimeType: 'text/plain',
+        }, { force: true });
+        
+        cy.get('textarea').first().should('not.be.empty');
       });
     });
 
-    it('E2E_RESUME_012: Should handle resume without job description', () => {
-      cy.fillResume(sampleResume);
-      cy.analyzeResume();
+    it('Should show warning for PDF files', () => {
+      cy.get('input[type="file"]').selectFile({
+        contents: Cypress.Buffer.from('dummy pdf content'),
+        fileName: 'resume.pdf',
+        mimeType: 'application/pdf',
+      }, { force: true });
       
-      // Should still show score (lower due to no keyword matching)
-      cy.get('[class*="score"]').should('be.visible');
-      cy.get('body').should('contain', /paste a job description/i);
+      cy.get('.hint', { timeout: 5000 }).should('contain', 'PDF');
     });
 
-    it('E2E_RESUME_013: Should detect missing resume sections', () => {
-      const incompleteResume = 'John Doe\nEmail: john@example.com\n\nSome experience text.';
+    it('Should validate file size limit (2MB)', () => {
+      const largeContent = 'x'.repeat(3 * 1024 * 1024); // 3MB
       
-      cy.fillResume(incompleteResume);
-      cy.analyzeResume();
+      cy.get('input[type="file"]').selectFile({
+        contents: Cypress.Buffer.from(largeContent),
+        fileName: 'large.txt',
+        mimeType: 'text/plain',
+      }, { force: true });
       
-      // Should show missing sections in feedback
-      cy.get('.feedback-list').should('contain', /missing/i);
+      cy.get('.hint', { timeout: 5000 }).should('contain', 'large');
     });
 
-    it('E2E_RESUME_014: Should highlight weak words in resume', () => {
-      const weakResume = `John Doe
-Email: john@example.com
-
-EXPERIENCE
-• Responsible for managing tasks
-• Worked on various projects
-• Assisted team members`;
+    it('Should clear previous content when new file is uploaded', () => {
+      cy.get('textarea').first().clear().type('Old content');
       
-      cy.fillResume(weakResume);
-      cy.analyzeResume();
-      
-      // Should show weak word feedback
-      cy.get('body').should('contain', /weak|vocabulary/i);
-    });
-
-    it('E2E_RESUME_015: Should suggest strong action verbs', () => {
-      cy.completeResumeAnalysis(sampleResume, sampleJobDescription);
-      
-      // Should mention action verbs in feedback
-      cy.get('body').should('contain', /vocabulary|action|verb/i);
+      cy.fixture('resumes/resume1.txt').then(fileContent => {
+        cy.get('input[type="file"]').selectFile({
+          contents: Cypress.Buffer.from(fileContent),
+          fileName: 'resume.txt',
+          mimeType: 'text/plain',
+        }, { force: true });
+        
+        cy.get('textarea').first().should('not.contain.value', 'Old content');
+      });
     });
   });
 
-  // ============================================
-  // E2E_RESUME_016-020: Job Role Templates
-  // ============================================
-  describe('E2E_RESUME_016-020: Job Role Template Recommendations', () => {
-    
-    beforeEach(() => {
-      cy.completeResumeAnalysis(sampleResume, sampleJobDescription);
+  describe('E2E_RESUME_002: Job Description Input', () => {
+    it('Should display job description textarea', () => {
+      cy.get('textarea').last().should('be.visible');
+      cy.get('textarea').last()
+        .invoke('attr', 'placeholder')
+        .should('include', 'Job Description');
     });
 
-    it('E2E_RESUME_016: Should display job role selector', () => {
+    it('Should enter job description', () => {
+      const jdText = 'Looking for Senior Developer with React and Node.js experience. Must have 5+ years experience.';
+      
+      cy.get('textarea').last().clear().type(jdText, { delay: 0 });
+      cy.get('textarea').last().should('contain.value', 'Senior Developer');
+    });
+
+    it('Should work without job description', () => {
+      cy.get('textarea').first().clear().type('John Doe\nDeveloper');
+      cy.get('button').contains(/analyze/i).should('not.be.disabled');
+    });
+  });
+
+  describe('E2E_RESUME_003: Job Role Selection', () => {
+    it('Should display job role dropdown', () => {
       cy.get('#job-role').should('be.visible');
-      cy.get('#job-role option').should('have.length.at.least', 5);
     });
 
-    it('E2E_RESUME_017: Should recommend template based on job role', () => {
-      // Select Software Engineer role
-      cy.get('#job-role').select('Software Engineer');
+    it('Should have default job role selected', () => {
+      cy.get('#job-role').should('have.value');
+    });
+
+    it('Should select Software Engineer role', () => {
+      cy.get('#job-role').select('software_engineer');
+      cy.get('#job-role').should('have.value', 'software_engineer');
+    });
+
+    it('Should select Data Analyst role', () => {
+      cy.get('#job-role').select('data_analyst');
+      cy.get('#job-role').should('have.value', 'data_analyst');
+    });
+
+    it('Should select Product Manager role', () => {
+      cy.get('#job-role').select('product_manager');
+      cy.get('#job-role').should('have.value', 'product_manager');
+    });
+
+    it('Should select Consultant role', () => {
+      cy.get('#job-role').select('consultant');
+      cy.get('#job-role').should('have.value', 'consultant');
+    });
+  });
+
+  describe('E2E_RESUME_004: Analysis Execution', () => {
+    it('Should analyze resume and display score', () => {
+      cy.get('textarea').first().clear().type('John Doe\nEmail: john@example.com\n\nSummary\nExperienced developer\n\nSkills\nReact, Node.js\n\nExperience\nSenior Developer\n\nEducation\nBS CS\n\nProjects\nPortfolio', { delay: 0 });
+      cy.get('textarea').last().clear().type('Senior Developer with React and Node.js', { delay: 0 });
       
-      // Should show template recommendation
+      cy.get('button').contains(/analyze/i).click();
+      
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+      cy.get('.score-num').should('be.visible').and('not.be.empty');
+    });
+
+    it('Should require resume text before analysis', () => {
+      cy.get('textarea').first().clear();
+      cy.get('button').contains(/analyze/i).should('be.disabled');
+    });
+
+    it('Should display feedback after analysis', () => {
+      cy.get('textarea').first().clear().type('John Doe\nEmail: john@example.com\n\nSummary\nDeveloper\n\nSkills\nReact\n\nExperience\nDeveloper', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      
+      cy.get('.feedback-list', { timeout: 10000 }).should('be.visible');
+      cy.get('.feedback-list li').should('have.length.greaterThan', 0);
+    });
+
+    it('Should calculate higher score with complete sections', () => {
+      const fullResume = 'John Doe\nEmail: john@example.com\nPhone: 555-1234\n\nSummary\nExperienced Developer with 5+ years\n\nSkills\nReact, Node.js, MongoDB, Docker\n\nExperience\nSenior Developer at TechCorp\nSpearheaded development projects\n\nEducation\nBS Computer Science from University\n\nProjects\nE-commerce Platform\nPortfolio Website';
+      
+      cy.get('textarea').first().clear().type(fullResume, { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      
+      cy.get('.score-num', { timeout: 10000 })
+        .invoke('text')
+        .then(parseFloat)
+        .should('be.gte', 40);
+    });
+
+    it('Should match keywords from job description', () => {
+      cy.get('textarea').first().clear().type('John Doe\nEmail: john@example.com\n\nSkills\nReact, Node.js, MongoDB, Python, Docker', { delay: 0 });
+      cy.get('textarea').last().clear().type('We need React, Node.js, MongoDB, Python, Docker skills', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      
+      cy.get('.score-num', { timeout: 10000 })
+        .invoke('text')
+        .then(parseFloat)
+        .should('be.gte', 30);
+    });
+
+    it('Should scroll to analysis results after analyzing', () => {
+      cy.get('textarea').first().clear().type('John Doe\nDeveloper', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+      cy.get('.ats-analysis-card').should('be.inViewport');
+    });
+  });
+
+  describe('E2E_RESUME_005: Template Selection', () => {
+    beforeEach(() => {
+      cy.get('textarea').first().clear().type('John Doe\nEmail: john@example.com\n\nSummary\nDeveloper\n\nSkills\nReact\n\nExperience\nDeveloper', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+    });
+
+    it('Should display template options', () => {
+      cy.get('.template-grid').should('be.visible');
+      cy.get('.template-card').should('have.length', 3);
+    });
+
+    it('Should select Modern template', () => {
+      cy.get('.template-card').contains('Modern').click();
+      cy.get('.template-card.selected').should('contain', 'Modern');
+    });
+
+    it('Should select Minimal template', () => {
+      cy.get('.template-card').contains('Minimal').click();
+      cy.get('.template-card.selected').should('contain', 'Minimal');
+    });
+
+    it('Should select Classic template', () => {
+      cy.get('.template-card').contains('Classic').click();
+      cy.get('.template-card.selected').should('contain', 'Classic');
+    });
+
+    it('Should update preview when template changes', () => {
+      cy.get('.template-card').contains('Classic').click();
+      cy.get('.resume-sheet').should('have.class', 'theme-classic');
+    });
+
+    it('Should show role-based template recommendation', () => {
       cy.get('.template-recommendation').should('be.visible');
     });
 
-    it('E2E_RESUME_018: Should apply recommended template', () => {
-      // Change job role
-      cy.get('#job-role').select('Product Manager');
-      
-      // Check if apply button appears
-      cy.get('body').then(($body) => {
-        if ($body.find('.btn-apply-template').length > 0) {
-          cy.get('.btn-apply-template').click();
-          cy.wait(500);
-          
-          // Verify template changed
-          cy.get('[class*="template-card"][class*="selected"]').should('exist');
+    it('Should apply recommended template', () => {
+      cy.get('.btn-apply-template').then(($btn) => {
+        if ($btn.length > 0) {
+          cy.wrap($btn).first().click();
+          cy.get('.template-card.selected').should('be.visible');
         }
       });
     });
+  });
 
-    it('E2E_RESUME_019: Should update preview when role changes', () => {
-      const initialPreview = cy.get('.resume-sheet');
-      initialPreview.should('be.visible');
+  describe('E2E_RESUME_006: PDF Export', () => {
+    beforeEach(() => {
+      cy.get('textarea').first().clear().type('John Doe\nEmail: john@example.com\n\nSummary\nDeveloper\n\nSkills\nReact\n\nExperience\nDeveloper', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+    });
+
+    it('Should display download button', () => {
+      cy.get('button').contains(/download/i).should('be.visible');
+      cy.get('button').contains(/download/i).should('not.be.disabled');
+    });
+
+    it('Should show correct template name in download button', () => {
+      cy.get('.template-card').contains('Modern').click();
+      cy.get('button').contains(/download/i).should('contain', 'Modern');
+    });
+  });
+
+  describe('E2E_RESUME_007: Data Persistence', () => {
+    it('Should persist resume data in localStorage', () => {
+      const resumeText = 'John Doe\nDeveloper with skills';
+      const jdText = 'Looking for developer';
       
-      // Change role
-      cy.get('#job-role').select('Data Scientist/Analyst');
-      cy.wait(500);
+      cy.get('textarea').first().clear().type(resumeText, { delay: 0 });
+      cy.get('textarea').last().clear().type(jdText, { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
       
-      // Preview should still be visible
+      cy.window().then((win) => {
+        const stored = win.localStorage.getItem('RA_RESUME_alpha123@gmail.com');
+        expect(stored).to.not.be.null;
+        expect(stored).to.include('John Doe');
+      });
+    });
+
+    it('Should load persisted data on page reload', () => {
+      cy.get('textarea').first().clear().type('Test Resume Content For Persistence', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+      
+      cy.reload();
+      cy.contains('button', /logout/i, { timeout: 10000 }).should('be.visible');
+      cy.get('textarea').first().should('contain.value', 'Test Resume Content');
+    });
+
+    it('Should maintain analysis state after reload', () => {
+      cy.get('textarea').first().clear().type('John Doe\nDeveloper', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+      
+      const scoreValue = cy.get('.score-num').invoke('text');
+      
+      cy.reload();
+      cy.contains('button', /logout/i, { timeout: 10000 }).should('be.visible');
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+    });
+  });
+
+  describe('E2E_RESUME_008: Resume Preview', () => {
+    beforeEach(() => {
+      cy.get('textarea').first().clear().type('John Doe\nEmail: john@example.com\n\nSummary\nExperienced Developer', { delay: 0 });
+      cy.get('button').contains(/analyze/i).click();
+      cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+    });
+
+    it('Should display resume preview', () => {
       cy.get('.resume-sheet').should('be.visible');
     });
 
-    it('E2E_RESUME_020: Should allow manual template override', () => {
-      // Select a role
-      cy.get('#job-role').select('Consultant');
+    it('Should show candidate name in preview', () => {
+      cy.get('.name').should('contain', 'John Doe');
+    });
+
+    it('Should show avatar with first letter', () => {
+      cy.get('.avatar').should('contain', 'J');
+    });
+
+    it('Should update preview when template changes', () => {
+      cy.get('.template-card').contains('Classic').click();
+      cy.get('.resume-sheet').should('have.class', 'theme-classic');
       
-      // Manually select different template
-      cy.contains('.template-name', 'Modern Professional').parent().click();
-      
-      // Manual selection should override recommendation
-      cy.contains('.template-name', 'Modern Professional')
-        .parent()
-        .should('have.class', 'selected');
+      cy.get('.template-card').contains('Minimal').click();
+      cy.get('.resume-sheet').should('have.class', 'theme-minimal');
+    });
+
+    it('Should display resume content in preview', () => {
+      cy.get('.sheet-body').should('be.visible');
+      cy.get('.sheet-body').should('not.be.empty');
     });
   });
 });

@@ -5,47 +5,55 @@
 
 import './commands';
 
-// ============================================
-// Global Error Handling
-// ============================================
-
+// Disable uncaught exception handling for 3rd party errors
 Cypress.on('uncaught:exception', (err, runnable) => {
   // Ignore specific errors that don't affect tests
-  const ignoredErrors = [
-    'ResizeObserver loop limit exceeded',
-    'ResizeObserver loop completed with undelivered notifications',
-    'Cannot read properties of undefined',
-    'Cannot read properties of null',
-    'NetworkError',
-    'Failed to fetch',
-  ];
-  
-  if (ignoredErrors.some(msg => err.message.includes(msg))) {
+  if (err.message.includes('ResizeObserver loop limit exceeded')) {
     return false;
   }
-  
-  // Log other errors but don't fail the test
-  cy.log('Uncaught exception:', err.message);
+  if (err.message.includes('Cannot read')) {
+    return false;
+  }
+  if (err.message.includes('Network request failed')) {
+    return false;
+  }
+  // Return true to fail the test on other exceptions
   return true;
 });
 
-// ============================================
-// Global Hooks
-// ============================================
-
+// Before each test
 beforeEach(() => {
-  // Clear all storage before each test
-  cy.clearAllStorage();
+  // Clear all storage using correct Cypress commands
+  cy.clearLocalStorage();
+  cy.clearCookies();
+  
+  // Clear session storage
+  cy.window().then((win) => {
+    win.sessionStorage.clear();
+  });
   
   // Set viewport
   cy.viewport(1280, 720);
 });
 
-afterEach(function() {
-  // Take screenshot on failure
-  if (this.currentTest.state === 'failed') {
-    cy.screenshot(`${this.currentTest.title} -- FAILED`, {
-      capture: 'fullPage',
-    });
-  }
+// After each test
+afterEach(() => {
+  // Take screenshot on failure (Cypress does this automatically)
+  // Additional cleanup if needed
+});
+
+// Global test setup
+before(() => {
+  // Visit the app once before all tests
+  cy.log('Starting Cypress Test Suite');
+});
+
+// Global test teardown
+after(() => {
+  // Final cleanup
+  cy.clearLocalStorage();
+  cy.clearCookies();
+  cy.window().then((win) => {
+    win.sessionStorage.clear();
+  });
 });

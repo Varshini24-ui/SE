@@ -1,163 +1,131 @@
 /**
- * Custom Cypress Commands for Resume Analyzer Application
+ * Custom Cypress Commands for Resume Analyzer
+ * Complete File - Replace your existing commands.js with this
  */
 
-// ============================================
-// Authentication Commands
-// ============================================
-
-/**
- * Login command - handles both already logged in and fresh login scenarios
- */
-Cypress.Commands.add('login', (email = 'testuser@example.com', password = 'SecurePass123!') => {
+// ====================
+// LOGIN COMMAND
+// ====================
+Cypress.Commands.add('loginUser', (email, password) => {
   cy.visit('/');
-  cy.wait(1000);
+  cy.wait(1000); // Wait for app to initialize
   
   // Check if already logged in
   cy.get('body').then(($body) => {
-    if ($body.find('button:contains("Logout")').length > 0) {
-      cy.log('Already logged in');
+    if ($body.text().includes('Logout')) {
+      cy.log('User already logged in');
       return;
     }
     
-    // Click login button
-    cy.contains('button', /login|sign in/i, { timeout: 5000 })
-      .should('be.visible')
-      .click();
-    
-    // Fill in credentials
-    cy.get('input[type="email"]').clear().type(email);
-    cy.get('input[type="password"]').clear().type(password);
-    
-    // Submit form
+    // Perform login
+    cy.get('input[type="email"]', { timeout: 5000 }).should('be.visible').clear().type(email);
+    cy.get('input[type="password"]', { timeout: 5000 }).should('be.visible').clear().type(password);
     cy.get('button[type="submit"]').click();
     
-    // Wait for successful login - logout button appears
+    // Wait for successful login
     cy.contains('button', /logout/i, { timeout: 10000 }).should('be.visible');
-    cy.log(`Logged in as ${email}`);
+    cy.log(`Successfully logged in as ${email}`);
   });
 });
 
-/**
- * Register a new user
- */
-Cypress.Commands.add('register', (email, password) => {
+// ====================
+// LOGOUT COMMAND
+// ====================
+Cypress.Commands.add('logoutUser', () => {
+  cy.get('button.logout-btn', { timeout: 5000 }).should('be.visible').click();
+  cy.get('.auth-card', { timeout: 5000 }).should('be.visible');
+  cy.log('Successfully logged out');
+});
+
+// ====================
+// REGISTER COMMAND
+// ====================
+Cypress.Commands.add('registerUser', (email, password) => {
   cy.visit('/');
   cy.wait(1000);
   
-  // Clear storage first
-  cy.clearLocalStorage();
-  cy.clearCookies();
-  
   // Click register/need account button
-  cy.contains('button', /register|need/i, { timeout: 5000 })
-    .should('be.visible')
-    .click();
+  cy.contains('button', /register|need|sign up/i, { timeout: 5000 }).click();
   
-  // Fill in registration form
-  cy.get('input[type="email"]').first().clear().type(email);
-  cy.get('input[type="password"]').first().clear().type(password);
-  
-  // Submit registration
+  // Fill registration form
+  cy.get('input[type="email"]', { timeout: 5000 }).should('be.visible').clear().type(email);
+  cy.get('input[type="password"]', { timeout: 5000 }).should('be.visible').clear().type(password);
   cy.get('button[type="submit"]').click();
   
   // Wait for successful registration
   cy.contains('button', /logout/i, { timeout: 10000 }).should('be.visible');
-  cy.log(`Registered new user: ${email}`);
+  cy.log(`Successfully registered as ${email}`);
 });
 
-/**
- * Logout command
- */
-Cypress.Commands.add('logout', () => {
-  cy.contains('button', /logout/i, { timeout: 5000 }).should('be.visible').click();
-  cy.contains('button', /login|register/i, { timeout: 5000 }).should('be.visible');
-  cy.log('Logged out successfully');
-});
-
-// ============================================
-// Resume Analysis Commands
-// ============================================
-
-/**
- * Fill resume content
- */
-Cypress.Commands.add('fillResume', (resumeText) => {
-  cy.get('textarea').first().clear().type(resumeText, { delay: 0 });
-});
-
-/**
- * Fill job description
- */
-Cypress.Commands.add('fillJobDescription', (jdText) => {
-  cy.get('textarea').last().clear().type(jdText, { delay: 0 });
-});
-
-/**
- * Analyze resume
- */
-Cypress.Commands.add('analyzeResume', () => {
-  cy.contains('button', /analyze resume/i).should('be.visible').click();
+// ====================
+// ANALYZE RESUME COMMAND
+// ====================
+Cypress.Commands.add('analyzeResume', (resumeText, jdText = '') => {
+  cy.get('textarea').first().should('be.visible').clear().type(resumeText, { delay: 0 });
   
-  // Wait for analysis to complete - score should appear
-  cy.get('[class*="score"]', { timeout: 10000 }).should('be.visible');
-});
-
-/**
- * Complete resume analysis flow
- */
-Cypress.Commands.add('completeResumeAnalysis', (resumeText, jobDescription = '') => {
-  cy.fillResume(resumeText);
-  
-  if (jobDescription) {
-    cy.fillJobDescription(jobDescription);
+  if (jdText) {
+    cy.get('textarea').last().should('be.visible').clear().type(jdText, { delay: 0 });
   }
   
-  cy.analyzeResume();
+  cy.get('button').contains(/analyze/i).should('not.be.disabled').click();
+  cy.get('.ats-analysis-card', { timeout: 10000 }).should('be.visible');
+  cy.log('Resume analyzed successfully');
 });
 
-/**
- * Select a template
- */
+// ====================
+// SELECT TEMPLATE COMMAND
+// ====================
 Cypress.Commands.add('selectTemplate', (templateName) => {
-  cy.contains('[class*="template"]', templateName, { timeout: 5000 })
-    .should('be.visible')
-    .click();
-  
-  cy.get('[class*="template"][class*="selected"]').should('exist');
+  cy.get('.template-card').contains(templateName, { timeout: 5000 }).click();
+  cy.get('.template-card.selected').should('contain', templateName);
+  cy.log(`Template "${templateName}" selected`);
 });
 
-/**
- * Download PDF
- */
-Cypress.Commands.add('downloadPDF', () => {
-  cy.contains('button', /download|export|pdf/i)
-    .should('be.visible')
-    .click();
-  
-  // Verify download button is clickable (actual download happens in browser)
-  cy.wait(1000);
-});
-
-// ============================================
-// Utility Commands
-// ============================================
-
-/**
- * Clear all storage
- */
-Cypress.Commands.add('clearAllStorage', () => {
+// ====================
+// CLEAR APP DATA COMMAND
+// ====================
+Cypress.Commands.add('clearAppData', () => {
   cy.clearLocalStorage();
   cy.clearCookies();
   cy.window().then((win) => {
     win.sessionStorage.clear();
   });
+  cy.log('All app data cleared');
 });
 
-/**
- * Wait for app to be ready
- */
-Cypress.Commands.add('waitForApp', () => {
-  cy.get('body', { timeout: 10000 }).should('exist');
-  cy.wait(500);
+// ====================
+// WAIT FOR APP LOAD
+// ====================
+Cypress.Commands.add('waitForAppLoad', () => {
+  cy.get('.hero', { timeout: 10000 }).should('be.visible');
+  cy.log('App loaded successfully');
+});
+
+// ====================
+// VIEWPORT ASSERTION (for checking if element is visible in viewport)
+// ====================
+Cypress.Commands.add('isInViewport', { prevSubject: true }, (subject) => {
+  const rect = subject[0].getBoundingClientRect();
+  
+  expect(rect.top).to.be.lessThan(window.innerHeight);
+  expect(rect.bottom).to.be.greaterThan(0);
+  expect(rect.left).to.be.lessThan(window.innerWidth);
+  expect(rect.right).to.be.greaterThan(0);
+  
+  return subject;
+});
+
+// ====================
+// CHAI ASSERTION FOR IN VIEWPORT
+// ====================
+chai.Assertion.addMethod('inViewport', function() {
+  const subject = this._obj[0];
+  const rect = subject.getBoundingClientRect();
+  
+  this.assert(
+    rect.top < window.innerHeight && rect.bottom > 0 &&
+    rect.left < window.innerWidth && rect.right > 0,
+    'expected element to be in viewport',
+    'expected element not to be in viewport'
+  );
 });

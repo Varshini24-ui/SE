@@ -10,21 +10,11 @@ module.exports = defineConfig({
     screenshotOnRunFailure: true,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 30000,
-    requestTimeout: 10000,
     setupNodeEvents(on, config) {
       // Implementation of node event listeners here
-      on('task', {
-        log(message) {
-          console.log(message);
-          return null;
-        },
-      });
+      return config;
     },
     specPattern: 'cypress/e2e/**/*.cy.js',
-    retries: {
-      runMode: 2,
-      openMode: 0,
-    },
   },
   component: {
     devServer: {
@@ -32,4 +22,6 @@ module.exports = defineConfig({
       bundler: 'webpack',
     },
   },
+  // Disable Chrome security for testing
+  chromeWebSecurity: false,
 });
