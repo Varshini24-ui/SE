@@ -1,41 +1,27 @@
-John Alexander Doe
-Email: john.doe@example.com
+John Smith
+Email: john.smith@email.com
 Phone: (555) 123-4567
-LinkedIn: https://linkedin.com/in/johndoe
+LinkedIn: linkedin.com/in/johnsmith
 
-PROFESSIONAL SUMMARY
-Experienced full-stack developer with 5+ years expertise in building scalable web applications using React and Node.js. Proven track record of leading development teams and delivering high-impact projects. Strong advocate for clean code and agile methodologies.
+Summary
+Highly motivated full-stack developer with 5+ years of experience in web technologies.
 
-EXPERIENCE
+Skills
+React, Node.js, MongoDB, Docker, Kubernetes, Python, JavaScript, Git
 
-Senior Full Stack Developer at TechCorp Inc. (January 2021 - Present)
-- Spearheaded development of microservices architecture serving 1M+ monthly active users
-- Orchestrated migration of legacy monolithic application to cloud-native infrastructure
-- Optimized database queries resulting in 40% improvement in application response time
-- Led development team of 5 engineers in implementing CI/CD pipelines
-- Mentored 3 junior developers on React best practices and software design patterns
+Experience
+Senior Developer at TechCorp (2020-2023)
+- Spearheaded development of microservices architecture
+- Led team of 5 developers
+- Improved system performance by 40%
 
-Full Stack Developer at StartupX (June 2018 - December 2020)
-- Developed customer-facing React portal with 500+ daily active users
-- Implemented MongoDB database design for complex data relationships
-- Built REST APIs using Node.js and Express serving mobile and web clients
-- Reduced application load time by 35% through performance optimization
+Junior Developer at StartupXYZ (2018-2020)
+- Developed RESTful APIs
+- Collaborated with cross-functional teams
 
-SKILLS
+Education
+BS Computer Science - University of Technology (2014-2018)
 
-Frontend: React, Vue.js, HTML5, CSS3, JavaScript (ES6+), Tailwind CSS
-Backend: Node.js, Express, Python, Django
-Databases: MongoDB, PostgreSQL, Firebase
-Tools: Git, Docker, Kubernetes, Jenkins, AWS, Azure
-Methodologies: Agile, Scrum, TDD
-
-EDUCATION
-
-Bachelor of Science in Computer Science
-University of Technology (Graduated: May 2017)
-GPA: 3.8/4.0
-
-CERTIFICATIONS
-
-AWS Solutions Architect Associate (March 2022)
-Google Cloud Professional Data Engineer (August 2021)
+Certifications
+- AWS Certified Developer
+- Certified Kubernetes Administrator

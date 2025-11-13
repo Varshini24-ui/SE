@@ -39,14 +39,25 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:unit": "jest test/unit",
-    "test:integration": "jest test/integration",
-    "test:performance": "jest test/performance --testTimeout=30000",
-    "test:security": "jest test/security",
-    "test:accessibility": "jest test/accessibility",
+    "test:unit": "jest test/unit --verbose",
+    "test:integration": "jest test/integration --verbose",
+    "test:performance": "jest test/performance --testTimeout=30000 --verbose",
+    "test:security": "jest test/security --verbose",
+    "test:accessibility": "jest test/accessibility --verbose",
+    "test:system": "jest --testPathPattern=test/system --runInBand --verbose",
+    "test:system:watch": "jest --testPathPattern=test/system --watch",
+    "test:system:coverage": "jest --testPathPattern=test/system --coverage --runInBand",
+    "test:system:verbose": "jest --testPathPattern=test/system --verbose --runInBand --detectOpenHandles",
+    "test:system:scenarios": "jest test/system/scenarios --runInBand --verbose",
+    "test:system:e2e": "jest test/system/scenarios/endToEndUserFlow.test.js --runInBand --verbose",
+    "test:system:resume": "jest test/system/scenarios/resumeAnalysisWorkflow.test.js --runInBand --verbose",
+    "test:system:auth": "jest test/system/scenarios/authenticationFlow.test.js --runInBand --verbose",
+    "test:system:chatbot": "jest test/system/scenarios/chatbotInteraction.test.js --runInBand --verbose",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:all": "jest --coverage && npm run cypress:run",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "test:full": "npm run test:coverage && npm run test:e2e && npm run test:system:coverage",
+    "test:complete": "npm run test:unit && npm run test:integration && npm run test:system && npm run test:performance && npm run test:security && npm run test:accessibility",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "cypress:headless": "cypress run --headless --browser chrome",
@@ -58,7 +69,6 @@
     "test:e2e:headless": "start-server-and-test start http://localhost:3000 cypress:headless",
     "test:e2e:chrome": "start-server-and-test start http://localhost:3000 cypress:chrome",
     "test:e2e:ci": "start-server-and-test start http://localhost:3000 'cypress run --record'",
-    "test:full": "npm run test:coverage && npm run test:e2e",
     "cypress:verify": "cypress verify",
     "cypress:info": "cypress info",
     "cypress:version": "cypress version",
@@ -67,8 +77,11 @@
     "format": "prettier --write src/ test/ cypress/",
     "format:check": "prettier --check src/ test/ cypress/",
     "coverage:report": "open coverage/lcov-report/index.html || xdg-open coverage/lcov-report/index.html",
+    "coverage:system": "jest --testPathPattern=test/system --coverage && npm run coverage:report",
     "clean": "rm -rf node_modules cypress/videos cypress/screenshots coverage",
     "clean:cypress": "rm -rf cypress/videos cypress/screenshots",
+    "clean:coverage": "rm -rf coverage",
+    "clean:system": "rm -rf test/system/reports/*",
     "postinstall": "cypress verify || echo 'Cypress verification failed'"
   },
   "eslintConfig": {
@@ -103,14 +116,25 @@
       "!src/index.js",
       "!src/reportWebVitals.js"
     ],
-    "coverageThresholds": {
+    "coverageThreshold": {
       "global": {
         "branches": 50,
         "functions": 50,
         "lines": 50,
         "statements": 50
       }
-    }
+    },
+    "testTimeout": 30000,
+    "testMatch": [
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/test/fixtures/",
+      "/test/helpers/",
+      "/test/__mocks__/"
+    ]
   },
   "engines": {
     "node": ">=14.0.0",
